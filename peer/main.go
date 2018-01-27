@@ -30,8 +30,10 @@ func main() {
 	check(err)
 	blockchain.Print()
 
+	//initialize p2plib
+	configuredMsgCases := createMsgHandlerCases()
 	tp = p2plib.InitializePeer(os.Args[1], "127.0.0.1",
-		os.Args[2], os.Args[3], config.ServerIP, config.ServerPort)
+		os.Args[2], os.Args[3], config.ServerIP, config.ServerPort, configuredMsgCases)
 
 	if tp.RunningPeer.Role == "client" {
 		color.Red("http://" + config.IP + ":" + config.ServerRESTPort)

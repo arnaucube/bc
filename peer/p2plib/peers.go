@@ -147,6 +147,21 @@ func PrintPeersList() {
 	}
 	fmt.Println("")
 }
+func PropagateData(p Peer, s string) {
+	//prepare the msg to send to all connected peers
+	var msg Msg
+	msg.Construct("Data", "new Data")
+	msg.Data = []byte(s)
+	msgB := msg.ToBytes()
+	for _, peer := range globalTP.PeersConnections.Outcoming.Peers {
+		if peer.Conn != nil {
+			if peer.ID != p.ID && p.ID != "" {
+				_, err := peer.Conn.Write(msgB)
+				check(err)
+			}
+		}
+	}
+}
 
 //send the block to all the peers of the outcomingPeersList
 /*func PropagateBlock(b Block) {

@@ -2,11 +2,8 @@ package p2plib
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 type Msg struct {
@@ -17,46 +14,24 @@ type Msg struct {
 	Data      []byte    `json:"data"`
 }
 
+type Case struct {
+	Case     string
+	Function func(Peer, Msg)
+}
+
+var msgCases map[string]func(Peer, Msg)
+
 func MessageHandler(peer Peer, msg Msg) {
 
 	log.Println("[New msg]")
 	log.Println(msg)
 
-	switch msg.Type {
-	case "Hi":
-		color.Yellow(msg.Type)
-		color.Green(msg.Content)
-		break
-	case "PeersList":
-		color.Blue("newPeerslist")
-		fmt.Println(msg.PeersList)
-		color.Red("PeersList")
-
-		UpdateNetworkPeersList(peer.Conn, msg.PeersList)
-		PropagatePeersList(peer)
-		PrintPeersList()
-		break
-	case "PeersList_Response":
-		//for the moment is not beeing used
-		color.Blue("newPeerslist, from PeersList_Response")
-		fmt.Println(msg.PeersList)
-		color.Red("PeersList_Response")
-
-		UpdateNetworkPeersList(peer.Conn, msg.PeersList)
-		PropagatePeersList(peer)
-		PrintPeersList()
-		break
-	case "Block":
-		/*//TODO check if the block is signed by an autorized emitter
-		if !blockchain.blockExists(msg.Block) {
-			blockchain.addBlock(msg.Block)
-			propagateBlock(msg.Block)
-		}*/
-		break
-	default:
-		log.Println("Msg.Type not supported")
-		break
-	}
+	/*for c, caseFunction := range msgCases {
+		if msg.Type == c {
+			caseFunction(peer, msg)
+		}
+	}*/
+	msgCases[msg.Type](peer, msg)
 
 }
 func (msg *Msg) Construct(msgtype string, msgcontent string) {

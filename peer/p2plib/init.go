@@ -4,11 +4,16 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/fatih/color"
 )
 
-func InitializePeer(role, ip, port, restport, serverip, serverport string) ThisPeer {
+func InitializePeer(role, ip, port, restport, serverip, serverport string,
+	configuredMsgCases map[string]func(Peer, Msg)) ThisPeer {
 	//initialize some vars
 	rand.Seed(time.Now().Unix())
+
+	InitializeDefaultMsgCases(configuredMsgCases)
 
 	var tp ThisPeer
 	tp.Running = true
@@ -40,4 +45,36 @@ func InitializePeer(role, ip, port, restport, serverip, serverport string) ThisP
 
 	return tp
 
+}
+
+func InitializeDefaultMsgCases(configuredMsgCases map[string]func(Peer, Msg)) {
+	//msgCases := make(map[string]func(Peer, Msg)) --> no, it's used the global
+	msgCases = make(map[string]func(Peer, Msg))
+
+	//get the user configured msgCases
+	for k, v := range configuredMsgCases {
+		msgCases[k] = v
+	}
+
+	msgCases["Hi"] = func(peer Peer, msg Msg) {
+		color.Yellow(msg.Type)
+		color.Green(msg.Content)
+	}
+
+	msgCases["PeersList"] = func(peer Peer, msg Msg) {
+		color.Blue("newPeerslist")
+		fmt.Println(msg.PeersList)
+		color.Red("PeersList")
+
+		UpdateNetworkPeersList(peer.Conn, msg.PeersList)
+		PropagatePeersList(peer)
+		PrintPeersList()
+	}
+
+	msgCases["Data"] = func(peer Peer, msg Msg) {
+		color.Yellow(msg.Type)
+		color.Green(msg.Content)
+		PropagateData(peer, "data")
+	}
+	fmt.Println(msgCases)
 }
