@@ -106,7 +106,7 @@ func PropagateBlock(b blockchainlib.Block) {
 
 func GenesisBlock(w http.ResponseWriter, r *http.Request) {
 	var genesis blockchainlib.Block
-	if len(blockchain.Blocks) >= 0 {
+	if len(blockchain.Blocks) > 0 {
 		genesis = blockchain.Blocks[0]
 	}
 

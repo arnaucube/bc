@@ -25,25 +25,20 @@ func main() {
 	//read configuration file
 	readConfig("config.json")
 
-	//read the stored blockchain
-	err := blockchain.ReadFromDisk()
-	check(err)
-	blockchain.Print()
-
-	//initialize p2plib
-	configuredMsgCases := createMsgHandlerCases()
-	tp = p2plib.InitializePeer(os.Args[1], "127.0.0.1",
-		os.Args[2], os.Args[3], config.ServerIP, config.ServerPort, configuredMsgCases)
+	//initialize blockchainlib
+	//InitializeBlockchain(role, ip, port, restport, serverip, serverport)
+	config.RESTPort = os.Args[3]
+	tp := blockchain.InitializeBlockchain(os.Args[1], "127.0.0.1",
+		os.Args[2], os.Args[3], config.ServerIP, config.ServerPort)
 
 	if tp.RunningPeer.Role == "client" {
 		color.Red("http://" + config.IP + ":" + config.ServerRESTPort)
 		fmt.Println(blockchain.GenesisBlock)
 		blockchain.ReconstructBlockchainFromBlock("http://"+config.IP+":"+config.ServerRESTPort, blockchain.GenesisBlock)
 	}
-	color.Blue("initialized")
-	go runRestServer()
+	color.Blue("peer and blokcchain initialized")
+	go runRestServer() //TODO this will not be necessary, due the communications will go full over tcp connections
 
-	fmt.Println(tp.Running)
 	for tp.Running {
 		time.Sleep(1000 * time.Millisecond)
 	}

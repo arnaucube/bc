@@ -119,6 +119,45 @@ func (bc *Blockchain) ReconstructBlockchainFromBlock(urlAPI string, h string) {
 	}
 	bc.Print()
 }
+func (bc *Blockchain) ReconstructBlockchainFromBlockRESTversion(urlAPI string, h string) {
+	color.Yellow("reconstructing the blockchain from last block in memory")
+	var block Block
+	var err error
+
+	block, err = bc.GetBlockByHash(h)
+	check(err)
+
+	if h == "" {
+		//no genesis block yet
+		color.Green(urlAPI + "/blocks/genesis")
+		res, err := http.Get(urlAPI + "/blocks/genesis")
+		check(err)
+		body, err := ioutil.ReadAll(res.Body)
+		check(err)
+		err = json.Unmarshal(body, &block)
+		check(err)
+		color.Yellow("[New Block]: " + block.Hash)
+		err = bc.AddBlock(block)
+		check(err)
+	} else {
+		block.NextHash = h
+	}
+
+	for block.NextHash != "" && block.Hash != "" {
+		res, err := http.Get(urlAPI + "/blocks/next/" + block.Hash)
+		check(err)
+		body, err := ioutil.ReadAll(res.Body)
+		check(err)
+		err = json.Unmarshal(body, &block)
+		check(err)
+		if block.Hash != "" {
+			color.Yellow("[New Block]: " + block.Hash)
+			err = bc.AddBlock(block)
+			check(err)
+		}
+	}
+	bc.Print()
+}
 
 func (bc *Blockchain) Print() {
 	color.Green("Printing Blockchain stored in memory")
